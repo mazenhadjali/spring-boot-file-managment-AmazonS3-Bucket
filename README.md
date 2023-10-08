@@ -1,4 +1,4 @@
-# Spring Boot Task for File Management with S3 Bucket using Minio Container
+# File Management with S3 Bucket using Minio Container - SpringBoot
 
 This Spring Boot application is designed to manage storage files using an S3 bucket with a Minio container. It provides functionality for storing, retrieving, and managing files while persisting file details in a PostgreSQL database. Below are some key points about this project:
 
