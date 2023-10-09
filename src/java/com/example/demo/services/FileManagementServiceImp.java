@@ -39,9 +39,6 @@ public class FileManagementServiceImp implements FileManagementService {
                 .contentType(multipartFile.getContentType())
                 .objectName(objectKey)
                 .build();
-
-        System.out.println(tempFile.getAbsolutePath());
-
         tempFile.delete();
         return fileAttachmentService.saveFileAttachment(fileAttachment);
     }
@@ -52,9 +49,7 @@ public class FileManagementServiceImp implements FileManagementService {
         Optional<FileAttachment> optionalFileAttachment = fileAttachmentService.getFileAttachmentById(id);
         if (optionalFileAttachment.isPresent()) {
             FileAttachment fileAttachment = optionalFileAttachment.get();
-            System.out.println(fileAttachment.getObjectName());
             return amazonS3Service.downloadFile(fileAttachment.getBucketName(), fileAttachment.getObjectName());
-
         }
         return null;
     }
