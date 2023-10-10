@@ -1,11 +1,15 @@
 package com.example.demo.controllers;
 
+import com.amazonaws.services.s3.model.Bucket;
 import com.example.demo.services.AmazonS3Service;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.List;
 
@@ -18,12 +22,9 @@ public class BucketController {
     private final AmazonS3Service amazonS3Service;
 
     @PostMapping
-    public ResponseEntity<String> createBucket (@RequestParam("bucketName") String bucketName){
-        if (amazonS3Service.createBucket(bucketName)){
-            return ResponseEntity.ok(String.format("Bucket: '%s' Created",bucketName));
-        }else {
-            return ResponseEntity.status(403).body(String.format("Bucket: '%s' already exists.",bucketName));
-        }
+    public ResponseEntity<Object> createBucket (@RequestParam("bucketName") String bucketName){
+        Bucket bucket = amazonS3Service.createBucket(bucketName);
+        return ResponseEntity.ok(bucket);
     }
 
     @GetMapping

@@ -20,19 +20,15 @@ public class AmazonS3ServiceImp implements AmazonS3Service {
     // Bucket operations
 
     public List<String> getAllBuckets() {
-        return  amazonS3.listBuckets().stream()
+        return amazonS3.listBuckets().stream()
                 .map(Bucket::getName)
                 .collect(Collectors.toList());
     }
 
     @Override
     @SneakyThrows
-    public boolean createBucket(String bucketName) {
-        if (!amazonS3.doesBucketExistV2(bucketName)) {
-            amazonS3.createBucket(bucketName);
-            return true;
-        }
-        return false;
+    public Bucket createBucket(String bucketName) {
+        return amazonS3.createBucket(bucketName);
     }
 
     @Override
@@ -44,14 +40,8 @@ public class AmazonS3ServiceImp implements AmazonS3Service {
 
     @Override
     @SneakyThrows
-    public boolean uploadFile(String bucketName, String objectKey, File file) {
-        try {
-            amazonS3.putObject(new PutObjectRequest(bucketName, objectKey, file));
-            return true;
-        } catch (AmazonS3Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+    public PutObjectResult uploadFile(String bucketName, String objectKey, File file) {
+        return amazonS3.putObject(new PutObjectRequest(bucketName, objectKey, file));
     }
 
     @Override

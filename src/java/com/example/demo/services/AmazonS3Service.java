@@ -1,5 +1,7 @@
 package com.example.demo.services;
 
+import com.amazonaws.services.s3.model.Bucket;
+import com.amazonaws.services.s3.model.PutObjectResult;
 import com.amazonaws.services.s3.model.S3Object;
 
 import java.io.File;
@@ -11,13 +13,13 @@ public interface AmazonS3Service {
 
     List<String> getAllBuckets();
 
-    boolean createBucket(String bucketName);
+    Bucket createBucket(String bucketName);
 
     boolean doesBucketExist(String bucketName);
 
     // File operations
 
-    boolean uploadFile(String bucketName, String objectKey, File file);
+    PutObjectResult uploadFile(String bucketName, String objectKey, File file);
 
     boolean deleteFile(String bucketName, String objectKey);
 
