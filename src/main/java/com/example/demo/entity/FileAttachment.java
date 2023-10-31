@@ -1,30 +1,23 @@
 package com.example.demo.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Column;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.Builder;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.SourceType;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.Instant;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @Table(name = "FileAttachment", uniqueConstraints = {@UniqueConstraint(columnNames = {"bucketName", "fileName", "objectName"})})
 public class FileAttachment {
     @Id
     @GeneratedValue
     private Long id;
-    @Column(nullable = false)
-    private String bucketName;
     @Column(nullable = false)
     private String fileName;
     @Column(nullable = false)
@@ -33,5 +26,13 @@ public class FileAttachment {
     private String contentType;
     @Column(nullable = false)
     private String objectName;
+
+    @ManyToOne( cascade = CascadeType.ALL )
+    private Bucket bucket;
+
+    @CreationTimestamp(source = SourceType.DB)
+    private Instant createdOn;
+    @UpdateTimestamp(source = SourceType.DB)
+    private Instant lastUpdatedOn;
 
 }
