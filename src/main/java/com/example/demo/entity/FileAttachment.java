@@ -13,21 +13,34 @@ import java.time.Instant;
 @Getter
 @Setter
 @NoArgsConstructor
-@Table(name = "FileAttachment", uniqueConstraints = {@UniqueConstraint(columnNames = {"bucketName", "fileName", "objectName"})})
+@Table(name = "FileAttachment", uniqueConstraints = {@UniqueConstraint(columnNames = {"objectKey"})})
 public class FileAttachment {
+
+    public FileAttachment(String fileName, String objectKey, Long fileSize, String contentType, Bucket bucket) {
+        this.fileName = fileName;
+        this.objectKey = objectKey;
+        this.fileSize = fileSize;
+        this.contentType = contentType;
+        this.bucket = bucket;
+    }
+
     @Id
     @GeneratedValue
     private Long id;
+
     @Column(nullable = false)
     private String fileName;
+
+    @Column(nullable = false)
+    private String objectKey;
+
     @Column(nullable = false)
     private Long fileSize;
+
     @Column(nullable = false)
     private String contentType;
-    @Column(nullable = false)
-    private String objectName;
 
-    @ManyToOne( cascade = CascadeType.ALL )
+    @ManyToOne(fetch = FetchType.EAGER)
     private Bucket bucket;
 
     @CreationTimestamp(source = SourceType.DB)

@@ -1,79 +1,79 @@
 package com.example.demo.controllers;
 
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
+import com.example.demo.dtos.BucketDto;
+import com.example.demo.dtos.CreateBucketRequest;
+import com.example.demo.dtos.DeleteMultiple;
+import com.example.demo.dtos.FileAttachmentDto;
+import com.example.demo.entity.Bucket;
 import com.example.demo.entity.FileAttachment;
+import com.example.demo.services.BucketService;
 import com.example.demo.services.FileAttachmentService;
 import com.example.demo.services.FileManagementService;
+import com.example.demo.utils.FilewithFileAttachment;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.apache.commons.io.IOUtils;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
+import java.io.File;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/files")
+@RequestMapping("/api/v1/")
 @RequiredArgsConstructor
 @CrossOrigin
 public class FileManagementController {
 
     private final FileManagementService fileManagementService;
+
     private final FileAttachmentService fileAttachmentService;
+    private final BucketService bucketService;
 
+    @GetMapping("/buckets")
+    @SneakyThrows
+    public ResponseEntity<List<BucketDto>> getAllBuckets() {
+        return ResponseEntity.ok().body(bucketService.getAllBuckets());
+    }
 
-    // Upload a file
+    @PostMapping("/buckets")
+    @SneakyThrows
+    public ResponseEntity<Bucket> createNewBucket(@RequestBody CreateBucketRequest createBucketRequest) {
+        return ResponseEntity.ok().body(bucketService.createBucket(createBucketRequest.getBucketName()));
+    }
+
+    @GetMapping("/buckets/{bucketName}")
+    @SneakyThrows
+    public ResponseEntity<List<FileAttachmentDto>> getFileAttachmentsByBucketName(@PathVariable("bucketName") String bucketName) {
+        return ResponseEntity.ok().body(fileAttachmentService.getAllFileAttachments(bucketName));
+    }
+
+    // Upload a file in a bucket
     @PostMapping("/upload")
-    public ResponseEntity<Object> uploadFile(@RequestParam("file") MultipartFile multipartFile,
-                                             @RequestParam("bucketName") String bucketName) {
+    public ResponseEntity<FileAttachment> uploadFile(@RequestParam("file") MultipartFile multipartFile, @RequestParam("bucketName") String bucketName) {
         if (multipartFile.isEmpty()) {
-            return ResponseEntity.badRequest().body("Missing file");
+            throw new RuntimeException("Missing file");
         }
-
-        FileAttachment savedFile = fileManagementService.saveFile(multipartFile, bucketName);
-        if (savedFile != null) {
-            return ResponseEntity.ok().body(savedFile);
-        } else {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File upload failed.");
-        }
+        return ResponseEntity.ok().body(fileManagementService.saveFile(multipartFile, bucketName));
     }
 
     // Download a file by ID
     @SneakyThrows
-    @GetMapping("/download/{id}")
+    @GetMapping(value = "/download/{id}")
     public ResponseEntity<byte[]> downloadFile(@PathVariable Long id) {
-        S3Object s3Object = fileManagementService.getFileById(id);
-        S3ObjectInputStream inputStream = s3Object.getObjectContent();
+        // Retrieve file details from your service
+        FilewithFileAttachment details = fileManagementService.getFileById(id);
+        FileAttachment fileAttachment = details.getFileAttachment();
+        // Create headers to set the file's MIME type and suggest a file name
+        String mimeType = fileAttachment.getContentType();
+        String filename = fileAttachment.getFileName();
 
-        try {
-            byte[] content = IOUtils.toByteArray(inputStream);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(mimeType));
+        headers.setContentDisposition(ContentDisposition.builder("attachment").filename(filename).build());
+        headers.setCacheControl(CacheControl.noCache().getHeaderValue());
 
-            System.out.println(s3Object.getKey());
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-            headers.setContentDispositionFormData("attachment", s3Object.getKey());
-
-            return new ResponseEntity<>(content, headers, HttpStatus.OK);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        } finally {
-            inputStream.close();
-        }
+        return new ResponseEntity<>(details.getFile(), headers, HttpStatus.OK);
     }
 
 
@@ -88,9 +88,11 @@ public class FileManagementController {
         }
     }
 
-    @GetMapping("/bucket/{bucketName}")
-    @SneakyThrows
-    public ResponseEntity<List<FileAttachment>> getFileAttachmentsByBucketName(@PathVariable("bucketName") String bucketName) {
-        return ResponseEntity.ok().body(fileAttachmentService.getAllFileAttachments(bucketName));
+    @DeleteMapping("/deletemultiple")
+    public ResponseEntity<String> deleteFile(@RequestBody DeleteMultiple deleteMultiple) {
+        fileManagementService.deleteMultipleFilesByIds(deleteMultiple.getIds());
+        return ResponseEntity.ok("Files Deleted Successfully");
     }
+
+
 }

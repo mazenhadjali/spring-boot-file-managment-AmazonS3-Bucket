@@ -1,14 +1,18 @@
 package com.example.demo.services;
 
-import com.amazonaws.services.s3.model.S3Object;
 import com.example.demo.entity.FileAttachment;
+import com.example.demo.utils.FilewithFileAttachment;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 public interface FileManagementService {
 
     FileAttachment saveFile(MultipartFile multipartFile, String bucketName);
 
-    S3Object getFileById(Long id);
+    FilewithFileAttachment getFileById(Long id);
 
     boolean deleteFile(Long id);
+
+    void deleteMultipleFilesByIds(List<Long> ids);
 }

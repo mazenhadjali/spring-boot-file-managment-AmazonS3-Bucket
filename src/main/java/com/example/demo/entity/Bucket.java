@@ -30,4 +30,8 @@ public class Bucket {
     private Instant createdOn;
     @UpdateTimestamp(source = SourceType.DB)
     private Instant lastUpdatedOn;
+
+    public Bucket(String name) {
+        this.name = name;
+    }
 }

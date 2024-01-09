@@ -1,17 +1,15 @@
 package com.example.demo.configurations;
 
-import com.amazonaws.ClientConfiguration;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3Configuration;
 
-import java.util.Objects;
+import java.net.URI;
 
 @Configuration
 public class S3ClientConfigurer {
@@ -25,25 +23,20 @@ public class S3ClientConfigurer {
     @Value("${minio.minioSecretKey}")
     private String minioSecretKey;
 
-    public AWSCredentials credentials() {
-        return new BasicAWSCredentials(
-                Objects.requireNonNull(minioAccessKey),
-                Objects.requireNonNull(minioSecretKey)
-        );
-    }
-
     @Bean
-    public AmazonS3 amazonS3() {
-        ClientConfiguration clientConfiguration = new ClientConfiguration()
-                .withMaxErrorRetry(3)
-                .withMaxConnections(350);
+    public S3Client amazonS3() {
+        AwsBasicCredentials awsCreds = AwsBasicCredentials.create(minioAccessKey, minioSecretKey);
 
-        return AmazonS3ClientBuilder
-                .standard()
-                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(minioEndpoint, null))
-                .withPathStyleAccessEnabled(true)
-                .withCredentials(new AWSStaticCredentialsProvider(credentials()))
-                .withClientConfiguration(clientConfiguration)
+
+        S3Configuration s3Config = S3Configuration.builder()
+                .pathStyleAccessEnabled(true) // Enable path-style access for compatibility
+                .build();
+
+        return S3Client.builder()
+                .credentialsProvider(StaticCredentialsProvider.create(awsCreds))
+                .endpointOverride(URI.create(minioEndpoint)) // Override the S3 endpoint to use MinIO's
+                .region(Region.of("us-east-1")) // Dummy region, replace with your minio instance's region
+                .serviceConfiguration(s3Config) // Apply path-style access configuration
                 .build();
     }
 }

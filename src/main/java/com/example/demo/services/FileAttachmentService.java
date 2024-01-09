@@ -1,5 +1,6 @@
 package com.example.demo.services;
 
+import com.example.demo.dtos.FileAttachmentDto;
 import com.example.demo.entity.FileAttachment;
 
 import java.util.List;
@@ -9,7 +10,7 @@ public interface FileAttachmentService {
 
 
     FileAttachment saveFileAttachment(FileAttachment fileAttachment);
-    public List<FileAttachment> getAllFileAttachments(String bucketName);
+    public List<FileAttachmentDto> getAllFileAttachments(String bucketName);
     Optional<FileAttachment> getFileAttachmentById(Long id);
     void deleteFileAttachmentById(Long id);
 

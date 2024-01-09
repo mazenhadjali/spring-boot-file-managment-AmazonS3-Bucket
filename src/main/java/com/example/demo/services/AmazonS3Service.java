@@ -1,28 +1,20 @@
 package com.example.demo.services;
 
-import com.amazonaws.services.s3.model.Bucket;
-import com.amazonaws.services.s3.model.PutObjectResult;
-import com.amazonaws.services.s3.model.S3Object;
+import software.amazon.awssdk.services.s3.model.*;
 
-import java.io.File;
-import java.util.List;
+import java.util.ArrayList;
 
 public interface AmazonS3Service {
 
-    // Bucket operations
+    CreateBucketResponse createBucket(String bucketName);
 
-    List<String> getAllBuckets();
+    DeleteBucketResponse deleteEmptyBucket(String bucketName) ;
 
-    Bucket createBucket(String bucketName);
+    PutObjectResponse putObject(String bucketName, String key, byte[] file);
 
-    boolean doesBucketExist(String bucketName);
+    byte[] getObject(String bucketName, String objectKey);
 
-    // File operations
+    DeleteObjectsResponse deleteMultipleFiles(ArrayList<ObjectIdentifier> keys, String bucketName);
 
-    PutObjectResult uploadFile(String bucketName, String objectKey, File file);
-
-    boolean deleteFile(String bucketName, String objectKey);
-
-    S3Object downloadFile(String bucketName, String objectKey);
 
 }
